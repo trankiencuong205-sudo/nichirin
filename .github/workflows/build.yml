@@ -24,7 +24,13 @@ jobs:
 
       - name: Build
         working-directory: nichirin-mod
-        run: gradle build --no-daemon
+        run: |
+          set +e
+          gradle build --no-daemon --console=plain > build.log 2>&1
+          code=$?
+          msg=$(grep -E "error:|What went wrong|Could not|FAILED|warning: \[" -A2 build.log | head -40 | sed 's/%/%25/g' | awk '{printf "%s%%0A",$0}')
+          if [ "$code" != "0" ]; then echo "::error::$msg"; fi
+          exit $code
 
       - uses: actions/upload-artifact@v4
         with:
